@@ -27,28 +27,28 @@ START_POSITION = [
     ["R", "N", "B", "Q", "K", "B", "N", "R"],
 ]
 
-def load_piece_images():
+def loadPieceAssets():
     images = {}
-    for piece, img_file in PIECE_IMAGES.items():
+    for piece, imgFile in PIECE_IMAGES.items():
         images[piece] = pygame.transform.scale(
-            pygame.image.load(img_file), (SQUARE_SIZE, SQUARE_SIZE)
+            pygame.image.load(imgFile), (SQUARE_SIZE, SQUARE_SIZE)
         )
     return images
 
-def draw_board(win):
+def drawBoard(win):
     for row in range(ROWS):
         for col in range(COLS):
             color = WHITE if (row + col) % 2 == 0 else BLACK
             pygame.draw.rect(win, color, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
-def draw_pieces(win, board, images):
+def drawPieces(win, board, images):
     for row in range(ROWS):
         for col in range(COLS):
             piece = board[row][col]
             if piece != ".":
                 win.blit(images[piece], (col * SQUARE_SIZE, row * SQUARE_SIZE))
 
-def get_square_under_mouse(board, mouse_pos):
+def findCurrentSqaure(board, mouse_pos):
     x, y = mouse_pos
     col, row = x // SQUARE_SIZE, y // SQUARE_SIZE
     if 0 <= row < ROWS and 0 <= col < COLS:
@@ -59,7 +59,7 @@ def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("MagnusAI")
     clock = pygame.time.Clock()
-    images = load_piece_images()
+    images = loadPieceAssets()
 
     board = [row[:] for row in START_POSITION]
 
@@ -74,7 +74,7 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                square = get_square_under_mouse(board, mouse_pos)
+                square = findCurrentSqaure(board, mouse_pos)
                 if square:
                     row, col = square
                     if board[row][col] != ".":
@@ -83,7 +83,7 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONUP:
                 mouse_pos = pygame.mouse.get_pos()
-                square = get_square_under_mouse(board, mouse_pos)
+                square = findCurrentSqaure(board, mouse_pos)
                 if square and selected_piece:
                     new_row, new_col = square
 
@@ -94,8 +94,8 @@ def main():
                     selected_piece = None
                     selected_position = None
 
-        draw_board(win)
-        draw_pieces(win, board, images)
+        drawBoard(win)
+        drawPieces(win, board, images)
 
         if selected_position:
             row, col = selected_position
