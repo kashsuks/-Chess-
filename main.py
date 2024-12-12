@@ -8,12 +8,12 @@ SQUARE_SIZE = WIDTH // COLS
 WHITE, BLACK = (240, 217, 181), (181, 136, 99)
 
 PIECE_IMAGES = {
-    "P": "wp.png", "p": "bp.png",  # Pawn
-    "R": "wr.png", "r": "br.png",  # Rook
-    "N": "wn.png", "n": "bn.png",  # Knight
-    "B": "wb.png", "b": "bb.png",  # Bishop
-    "Q": "wq.png", "q": "bq.png",  # Queen
-    "K": "wk.png", "k": "bk.png",  # King
+    "P": "pieces/wp.png", "p": "pieces/bp.png",  # Pawn
+    "R": "pieces/wr.png", "r": "pieces/br.png",  # Rook
+    "N": "pieces/wn.png", "n": "pieces/bn.png",  # Knight
+    "B": "pieces/wb.png", "b": "pieces/bb.png",  # Bishop
+    "Q": "pieces/wq.png", "q": "pieces/bq.png",  # Queen
+    "K": "pieces/wk.png", "k": "pieces/bk.png",  # King
 }
 
 START_POSITION = [
