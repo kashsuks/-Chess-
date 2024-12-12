@@ -48,14 +48,23 @@ def draw_pieces(win, board, images):
             if piece != ".":
                 win.blit(images[piece], (col * SQUARE_SIZE, row * SQUARE_SIZE))
 
-# Main loop
+def get_square_under_mouse(board, mouse_pos):
+    x, y = mouse_pos
+    col, row = x // SQUARE_SIZE, y // SQUARE_SIZE
+    if 0 <= row < ROWS and 0 <= col < COLS:
+        return row, col
+    return None
+
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("MagnusAI")
     clock = pygame.time.Clock()
     images = load_piece_images()
 
-    board = START_POSITION
+    board = [row[:] for row in START_POSITION]
+
+    selected_piece = None
+    selected_position = None
 
     running = True
     while running:
@@ -63,8 +72,35 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                square = get_square_under_mouse(board, mouse_pos)
+                if square:
+                    row, col = square
+                    if board[row][col] != ".":
+                        selected_piece = board[row][col]
+                        selected_position = (row, col)
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                mouse_pos = pygame.mouse.get_pos()
+                square = get_square_under_mouse(board, mouse_pos)
+                if square and selected_piece:
+                    new_row, new_col = square
+
+                    old_row, old_col = selected_position
+                    board[old_row][old_col] = "."
+                    board[new_row][new_col] = selected_piece
+
+                    selected_piece = None
+                    selected_position = None
+
         draw_board(win)
         draw_pieces(win, board, images)
+
+        if selected_position:
+            row, col = selected_position
+            pygame.draw.rect(win, (255, 0, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
+
         pygame.display.update()
         clock.tick(60)
 
