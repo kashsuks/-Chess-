@@ -51,7 +51,7 @@ def draw_pieces(win, board, images):
 # Main loop
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Chess Board")
+    pygame.display.set_caption("MagnusAI")
     clock = pygame.time.Clock()
     images = load_piece_images()
 
