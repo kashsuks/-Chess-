@@ -93,7 +93,22 @@ def getLegalMoves(board, position, piece):
             newRow, newCol = row + dr, col + dc
             if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
                 moves.append((newRow, newCol))
-
+                
+    elif piece.lower() == "b": #Bishop moves
+        for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+            for i in range(1, ROWS):
+                newRow, newCol = row + i * dr, col + i * dc
+                if 0 <= newRow < ROWS and 0 <= newCol < COLS:
+                    if board[newRow][newCol] == ".":
+                        moves.append((newRow, newCol))
+                    elif board[newRow][newCol].islower() != piece.islower():
+                        moves.append((newRow, newCol))
+                        break
+                    else:
+                        break
+                else:
+                    break
+ 
     return moves
 
 def highlightLegalMoves(win, moves):
