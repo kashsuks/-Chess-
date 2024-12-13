@@ -136,9 +136,9 @@ def getLegalMoves(board, position, piece):
 def highlightLegalMoves(win, moves):
     for move in moves:
         row, col = move
-        center_x = col * SQUARE_SIZE + SQUARE_SIZE // 2
-        center_y = row * SQUARE_SIZE + SQUARE_SIZE // 2
-        pygame.draw.circle(win, (0, 255, 0), (center_x, center_y), SQUARE_SIZE // 8)
+        centerX = col * SQUARE_SIZE + SQUARE_SIZE // 2
+        centerY = row * SQUARE_SIZE + SQUARE_SIZE // 2
+        pygame.draw.circle(win, (0, 255, 0), (centerX, centerY), SQUARE_SIZE // 8)
 
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
