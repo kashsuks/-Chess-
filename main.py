@@ -2,10 +2,15 @@ import pygame
 
 pygame.init()
 
+SIDE_BAR_WIDTH = 100
 WIDTH, HEIGHT = 800, 800
 ROWS, COLS = 8, 8
 SQUARE_SIZE = WIDTH // COLS
+
 WHITE, BLACK = (240, 217, 181), (181, 136, 99)
+LIGHT_INDICATOR = (255, 255, 255)
+DARK_INDICATOR = (50, 50, 50)
+BACKGROUND_GRAY = (200, 200, 200)
 
 PIECE_IMAGES = {
     "P": "pieces/wp.png", "p": "pieces/bp.png",  # Pawn
@@ -39,7 +44,7 @@ def drawBoard(win):
     for row in range(ROWS):
         for col in range(COLS):
             color = WHITE if (row + col) % 2 == 0 else BLACK
-            pygame.draw.rect(win, color, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            pygame.draw.rect(win, color, ((col * SQUARE_SIZE), row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
 def drawPieces(win, board, images):
     for row in range(ROWS):
@@ -50,12 +55,35 @@ def drawPieces(win, board, images):
 
 def findCurrentSquare(board, mousePosition):
     x, y = mousePosition
+    if x >= WIDTH - SIDE_BAR_WIDTH:
+        return None
     col, row = x // SQUARE_SIZE, y // SQUARE_SIZE
     if 0 <= row < ROWS and 0 <= col < COLS:
         return row, col
     return None
 
-def getLegalMoves(board, position, piece):
+def drawSideBar(win, whiteTurn):
+    pygame.draw.rect(win, BACKGROUND_GRAY, (WIDTH - SIDE_BAR_WIDTH, 0, SIDE_BAR_WIDTH, HEIGHT))
+    turn_rect_height = HEIGHT // 2
+    
+    white_color = LIGHT_INDICATOR if whiteTurn else (150, 150, 150)
+    pygame.draw.rect(win, white_color, (WIDTH - SIDE_BAR_WIDTH, 0, SIDE_BAR_WIDTH, turn_rect_height))
+    
+    black_color = DARK_INDICATOR if not whiteTurn else (100, 100, 100)
+    pygame.draw.rect(win, black_color, (WIDTH - SIDE_BAR_WIDTH, turn_rect_height, SIDE_BAR_WIDTH, turn_rect_height))
+    
+    font = pygame.font.Font(None, 36)
+    white_text = font.render("White Turn", True, (0, 0, 0) if whiteTurn else (100, 100, 100))
+    black_text = font.render("Black Turn", True, (255, 255, 255) if not whiteTurn else (150, 150, 150))
+    
+    win.blit(white_text, (WIDTH - SIDE_BAR_WIDTH + (SIDE_BAR_WIDTH - white_text.get_width()) // 2, turn_rect_height // 2 - white_text.get_height() // 2))
+    win.blit(black_text, (WIDTH - SIDE_BAR_WIDTH + (SIDE_BAR_WIDTH - black_text.get_width()) // 2, turn_rect_height + turn_rect_height // 2 - black_text.get_height() // 2))
+    
+
+def getLegalMoves(board, position, piece, whiteTurn):
+    if (whiteTurn and piece.islower()) or (not whiteTurn and piece.isupper()):
+        return []
+
     row, col = position
     moves = []
 
@@ -148,6 +176,10 @@ def highlightLegalMoves(win, moves):
         centerY = row * SQUARE_SIZE + SQUARE_SIZE // 2
         pygame.draw.circle(win, (0, 255, 0), (centerX, centerY), SQUARE_SIZE // 8)
 
+def drawTurnIndicator(win, whiteTurn):
+    indicatorColor = (255, 255, 255) if whiteTurn else (0, 0, 0)
+    pygame.draw.circle(win, indicatorColor, (WIDTH - 50, HEIGHT - 50), 20)
+
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("MagnusAI")
@@ -156,6 +188,7 @@ def main():
 
     board = [row[:] for row in START_POSITION]
 
+    whiteTurn = True
     selectedPiece = None
     selectedPosition = None
     legalMoves = []
@@ -174,7 +207,7 @@ def main():
                     if board[row][col] != ".":
                         selectedPiece = board[row][col]
                         selectedPosition = (row, col)
-                        legalMoves = getLegalMoves(board, selectedPosition, selectedPiece)
+                        legalMoves = getLegalMoves(board, selectedPosition, selectedPiece, whiteTurn)
 
             if event.type == pygame.MOUSEBUTTONUP:
                 mousePosition = pygame.mouse.get_pos()
@@ -186,13 +219,18 @@ def main():
                         oldRow, oldCol = selectedPosition
                         board[oldRow][oldCol] = "."
                         board[newRow][newCol] = selectedPiece
+                        whiteTurn = not whiteTurn
 
                     selectedPiece = None
                     selectedPosition = None
                     legalMoves = []
 
+        win.fill(BACKGROUND_GRAY)
+
         drawBoard(win)
         drawPieces(win, board, images)
+        
+        drawSideBar(win, whiteTurn)
 
         if selectedPosition:
             row, col = selectedPosition
