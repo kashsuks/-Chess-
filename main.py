@@ -88,55 +88,57 @@ def getLegalMoves(board, position, piece):
                     break
 
     elif piece.lower() == "n":  # Knight moves
-        knightMoves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
-        for dr, dc in knightMoves:
-            newRow, newCol = row + dr, col + dc
-            if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
-                moves.append((newRow, newCol))
-                
-    elif piece.lower() == "b": #Bishop moves
+        knight_moves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
+        for dr, dc in knight_moves:
+            new_row, new_col = row + dr, col + dc
+            if 0 <= new_row < ROWS and 0 <= new_col < COLS and (board[new_row][new_col] == "." or board[new_row][new_col].islower() != piece.islower()):
+                moves.append((new_row, new_col))
+
+    elif piece.lower() == "b":  # Bishop moves
         for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
             for i in range(1, ROWS):
-                newRow, newCol = row + i * dr, col + i * dc
-                if 0 <= newRow < ROWS and 0 <= newCol < COLS:
-                    if board[newRow][newCol] == ".":
-                        moves.append((newRow, newCol))
-                    elif board[newRow][newCol].islower() != piece.islower():
-                        moves.append((newRow, newCol))
+                new_row, new_col = row + i * dr, col + i * dc
+                if 0 <= new_row < ROWS and 0 <= new_col < COLS:
+                    if board[new_row][new_col] == ".":
+                        moves.append((new_row, new_col))
+                    elif board[new_row][new_col].islower() != piece.islower():
+                        moves.append((new_row, new_col))
                         break
                     else:
                         break
                 else:
                     break
-    
-    elif piece.lower() == "q": #Queen moves
+
+    elif piece.lower() == "q":  # Queen moves
         for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
             for i in range(1, ROWS):
-                newRow, newCol = row + i * dr, col + i * dc
-                if 0 <= newRow < ROWS and 0 <= newCol < COLS:
-                    if board[newRow][newCol] == ".":
-                        moves.append((newRow, newCol))
-                    elif board[newRow][newCol].islower() != piece.islower():
-                        moves.append((newRow, newCol))
+                new_row, new_col = row + i * dr, col + i * dc
+                if 0 <= new_row < ROWS and 0 <= new_col < COLS:
+                    if board[new_row][new_col] == ".":
+                        moves.append((new_row, new_col))
+                    elif board[new_row][new_col].islower() != piece.islower():
+                        moves.append((new_row, new_col))
                         break
                     else:
                         break
                 else:
                     break
-    
+
     elif piece.lower() == "k":  # King moves
-        kingMoves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-        for dr, dc in kingMoves:
-            newRow, newCol = row + dr, col + dc
-            if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
-                moves.append((newRow, newCol))
-                
+        king_moves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        for dr, dc in king_moves:
+            new_row, new_col = row + dr, col + dc
+            if 0 <= new_row < ROWS and 0 <= new_col < COLS and (board[new_row][new_col] == "." or board[new_row][new_col].islower() != piece.islower()):
+                moves.append((new_row, new_col))
+
     return moves
 
 def highlightLegalMoves(win, moves):
     for move in moves:
         row, col = move
-        pygame.draw.rect(win, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
+        center_x = col * SQUARE_SIZE + SQUARE_SIZE // 2
+        center_y = row * SQUARE_SIZE + SQUARE_SIZE // 2
+        pygame.draw.circle(win, (0, 255, 0), (center_x, center_y), SQUARE_SIZE // 8)
 
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -147,7 +149,7 @@ def main():
     board = [row[:] for row in START_POSITION]
 
     selected_piece = None
-    selected_position = None
+    selectedPosition = None
     legalMoves = []
 
     running = True
@@ -163,8 +165,8 @@ def main():
                     row, col = square
                     if board[row][col] != ".":
                         selected_piece = board[row][col]
-                        selected_position = (row, col)
-                        legalMoves = getLegalMoves(board, selected_position, selected_piece)
+                        selectedPosition = (row, col)
+                        legalMoves = getLegalMoves(board, selectedPosition, selected_piece)
 
             if event.type == pygame.MOUSEBUTTONUP:
                 mouse_pos = pygame.mouse.get_pos()
@@ -173,19 +175,19 @@ def main():
                     newRow, newCol = square
 
                     if (newRow, newCol) in legalMoves:
-                        old_row, old_col = selected_position
+                        old_row, old_col = selectedPosition
                         board[old_row][old_col] = "."
                         board[newRow][newCol] = selected_piece
 
                     selected_piece = None
-                    selected_position = None
+                    selectedPosition = None
                     legalMoves = []
 
         drawBoard(win)
         drawPieces(win, board, images)
 
-        if selected_position:
-            row, col = selected_position
+        if selectedPosition:
+            row, col = selectedPosition
             pygame.draw.rect(win, (255, 0, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
             highlightLegalMoves(win, legalMoves)
 
@@ -193,6 +195,6 @@ def main():
         clock.tick(60)
 
     pygame.quit()
-
+    
 if __name__ == "__main__":
     main()
