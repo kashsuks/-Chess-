@@ -63,6 +63,14 @@ def getLegalMoves(board, position, piece):
         direction = -1 if piece.isupper() else 1
         if 0 <= row + direction < ROWS and board[row + direction][col] == ".":
             moves.append((row + direction, col))
+
+        if piece.isupper() and row == 6:  # White pawn (2nd rank)
+            if board[row + direction][col] == "." and board[row + 2 * direction][col] == ".":
+                moves.append((row + 2 * direction, col))
+        elif piece.islower() and row == 1:  # Black pawn (7th rank)
+            if board[row + direction][col] == "." and board[row + 2 * direction][col] == ".":
+                moves.append((row + 2 * direction, col))
+
         if col - 1 >= 0 and 0 <= row + direction < ROWS and board[row + direction][col - 1] != "." and board[row + direction][col - 1].islower() != piece.islower():
             moves.append((row + direction, col - 1))
         if col + 1 < COLS and 0 <= row + direction < ROWS and board[row + direction][col + 1] != "." and board[row + direction][col + 1].islower() != piece.islower():
