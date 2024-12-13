@@ -48,8 +48,8 @@ def drawPieces(win, board, images):
             if piece != ".":
                 win.blit(images[piece], (col * SQUARE_SIZE, row * SQUARE_SIZE))
 
-def findCurrentSquare(board, mouse_pos):
-    x, y = mouse_pos
+def findCurrentSquare(board, mousePosition):
+    x, y = mousePosition
     col, row = x // SQUARE_SIZE, y // SQUARE_SIZE
     if 0 <= row < ROWS and 0 <= col < COLS:
         return row, col
@@ -90,19 +90,19 @@ def getLegalMoves(board, position, piece):
     elif piece.lower() == "n":  # Knight moves
         knight_moves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
         for dr, dc in knight_moves:
-            new_row, new_col = row + dr, col + dc
-            if 0 <= new_row < ROWS and 0 <= new_col < COLS and (board[new_row][new_col] == "." or board[new_row][new_col].islower() != piece.islower()):
-                moves.append((new_row, new_col))
+            newRow, newCol = row + dr, col + dc
+            if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
+                moves.append((newRow, newCol))
 
     elif piece.lower() == "b":  # Bishop moves
         for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
             for i in range(1, ROWS):
-                new_row, new_col = row + i * dr, col + i * dc
-                if 0 <= new_row < ROWS and 0 <= new_col < COLS:
-                    if board[new_row][new_col] == ".":
-                        moves.append((new_row, new_col))
-                    elif board[new_row][new_col].islower() != piece.islower():
-                        moves.append((new_row, new_col))
+                newRow, newCol = row + i * dr, col + i * dc
+                if 0 <= newRow < ROWS and 0 <= newCol < COLS:
+                    if board[newRow][newCol] == ".":
+                        moves.append((newRow, newCol))
+                    elif board[newRow][newCol].islower() != piece.islower():
+                        moves.append((newRow, newCol))
                         break
                     else:
                         break
@@ -112,12 +112,12 @@ def getLegalMoves(board, position, piece):
     elif piece.lower() == "q":  # Queen moves
         for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
             for i in range(1, ROWS):
-                new_row, new_col = row + i * dr, col + i * dc
-                if 0 <= new_row < ROWS and 0 <= new_col < COLS:
-                    if board[new_row][new_col] == ".":
-                        moves.append((new_row, new_col))
-                    elif board[new_row][new_col].islower() != piece.islower():
-                        moves.append((new_row, new_col))
+                newRow, newCol = row + i * dr, col + i * dc
+                if 0 <= newRow < ROWS and 0 <= newCol < COLS:
+                    if board[newRow][newCol] == ".":
+                        moves.append((newRow, newCol))
+                    elif board[newRow][newCol].islower() != piece.islower():
+                        moves.append((newRow, newCol))
                         break
                     else:
                         break
@@ -125,11 +125,11 @@ def getLegalMoves(board, position, piece):
                     break
 
     elif piece.lower() == "k":  # King moves
-        king_moves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-        for dr, dc in king_moves:
-            new_row, new_col = row + dr, col + dc
-            if 0 <= new_row < ROWS and 0 <= new_col < COLS and (board[new_row][new_col] == "." or board[new_row][new_col].islower() != piece.islower()):
-                moves.append((new_row, new_col))
+        kingMoves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        for dr, dc in kingMoves:
+            newRow, newCol = row + dr, col + dc
+            if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
+                moves.append((newRow, newCol))
 
     return moves
 
@@ -148,7 +148,7 @@ def main():
 
     board = [row[:] for row in START_POSITION]
 
-    selected_piece = None
+    selectedPiece = None
     selectedPosition = None
     legalMoves = []
 
@@ -159,27 +159,27 @@ def main():
                 running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-                square = findCurrentSquare(board, mouse_pos)
+                mousePosition = pygame.mouse.get_pos()
+                square = findCurrentSquare(board, mousePosition)
                 if square:
                     row, col = square
                     if board[row][col] != ".":
-                        selected_piece = board[row][col]
+                        selectedPiece = board[row][col]
                         selectedPosition = (row, col)
-                        legalMoves = getLegalMoves(board, selectedPosition, selected_piece)
+                        legalMoves = getLegalMoves(board, selectedPosition, selectedPiece)
 
             if event.type == pygame.MOUSEBUTTONUP:
-                mouse_pos = pygame.mouse.get_pos()
-                square = findCurrentSquare(board, mouse_pos)
-                if square and selected_piece:
+                mousePosition = pygame.mouse.get_pos()
+                square = findCurrentSquare(board, mousePosition)
+                if square and selectedPiece:
                     newRow, newCol = square
 
                     if (newRow, newCol) in legalMoves:
-                        old_row, old_col = selectedPosition
-                        board[old_row][old_col] = "."
-                        board[newRow][newCol] = selected_piece
+                        oldRow, oldCol = selectedPosition
+                        board[oldRow][oldCol] = "."
+                        board[newRow][newCol] = selectedPiece
 
-                    selected_piece = None
+                    selectedPiece = None
                     selectedPosition = None
                     legalMoves = []
 
