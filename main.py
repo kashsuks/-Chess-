@@ -2,10 +2,10 @@ import pygame
 
 pygame.init()
 
-SIDE_BAR_WIDTH = 100
-WIDTH, HEIGHT = 800, 800
+SIDE_BAR_WIDTH = 110
+WIDTH, HEIGHT = 950, 840
 ROWS, COLS = 8, 8
-SQUARE_SIZE = WIDTH // COLS
+SQUARE_SIZE = WIDTH // (COLS + 1)
 
 WHITE, BLACK = (240, 217, 181), (181, 136, 99)
 LIGHT_INDICATOR = (255, 255, 255)
@@ -64,20 +64,20 @@ def findCurrentSquare(board, mousePosition):
 
 def drawSideBar(win, whiteTurn):
     pygame.draw.rect(win, BACKGROUND_GRAY, (WIDTH - SIDE_BAR_WIDTH, 0, SIDE_BAR_WIDTH, HEIGHT))
-    turn_rect_height = HEIGHT // 2
+    turnRectHeight = HEIGHT // 2
     
     white_color = LIGHT_INDICATOR if whiteTurn else (150, 150, 150)
-    pygame.draw.rect(win, white_color, (WIDTH - SIDE_BAR_WIDTH, 0, SIDE_BAR_WIDTH, turn_rect_height))
+    pygame.draw.rect(win, white_color, (WIDTH - SIDE_BAR_WIDTH, 0, SIDE_BAR_WIDTH, turnRectHeight))
     
     black_color = DARK_INDICATOR if not whiteTurn else (100, 100, 100)
-    pygame.draw.rect(win, black_color, (WIDTH - SIDE_BAR_WIDTH, turn_rect_height, SIDE_BAR_WIDTH, turn_rect_height))
+    pygame.draw.rect(win, black_color, (WIDTH - SIDE_BAR_WIDTH, turnRectHeight, SIDE_BAR_WIDTH, turnRectHeight))
     
     font = pygame.font.Font(None, 36)
-    white_text = font.render("White Turn", True, (0, 0, 0) if whiteTurn else (100, 100, 100))
-    black_text = font.render("Black Turn", True, (255, 255, 255) if not whiteTurn else (150, 150, 150))
+    whiteText = font.render("", True, (0, 0, 0) if whiteTurn else (100, 100, 100))
+    blackText = font.render("", True, (255, 255, 255) if not whiteTurn else (150, 150, 150))
     
-    win.blit(white_text, (WIDTH - SIDE_BAR_WIDTH + (SIDE_BAR_WIDTH - white_text.get_width()) // 2, turn_rect_height // 2 - white_text.get_height() // 2))
-    win.blit(black_text, (WIDTH - SIDE_BAR_WIDTH + (SIDE_BAR_WIDTH - black_text.get_width()) // 2, turn_rect_height + turn_rect_height // 2 - black_text.get_height() // 2))
+    win.blit(whiteText, (WIDTH - SIDE_BAR_WIDTH + (SIDE_BAR_WIDTH - whiteText.get_width()) // 2, turnRectHeight // 2 - whiteText.get_height() // 2))
+    win.blit(blackText, (WIDTH - SIDE_BAR_WIDTH + (SIDE_BAR_WIDTH - blackText.get_width()) // 2, turnRectHeight + turnRectHeight // 2 - blackText.get_height() // 2))
     
 
 def getLegalMoves(board, position, piece, whiteTurn):
