@@ -91,11 +91,11 @@ def isValidCastle(gameState, start, end):
     board = gameState.board
     piece = board[startRow][startCol]
 
-    # Determine if it's a kingside or queenside castle
+    # Is it a kingside or queenside castle?
     isKingsideCastle = endCol > startCol
     isWhite = piece.isupper()
 
-    # Check king and rook movement status
+    # Check the status of the king and rook
     if isWhite:
         if gameState.whiteKingMoved:
             return False
@@ -111,7 +111,7 @@ def isValidCastle(gameState, start, end):
         if not isKingsideCastle and gameState.blackRookQueensideMoved:
             return False
 
-    # Check path between king and rook is clear
+    # Check if the path between king and rook is clear
     colRange = range(startCol + 1, 7) if isKingsideCastle else range(1, startCol)
     for col in colRange:
         if board[startRow][col] != ".":
@@ -141,16 +141,16 @@ def getLegalMoves(gameState, position, piece, whiteTurn):
                 moves.append((row + 2 * direction, col))
 
         # Capture moves
-        capture_cols = [col - 1, col + 1]
-        for capture_col in capture_cols:
-            if 0 <= capture_col < COLS and 0 <= row + direction < ROWS:
+        captureCols = [col - 1, col + 1]
+        for captureCol in captureCols:
+            if 0 <= captureCol < COLS and 0 <= row + direction < ROWS:
                 # Normal capture
-                if board[row + direction][capture_col] != "." and board[row + direction][capture_col].islower() != piece.islower():
-                    moves.append((row + direction, capture_col))
+                if board[row + direction][captureCol] != "." and board[row + direction][captureCol].islower() != piece.islower():
+                    moves.append((row + direction, captureCol))
                 
                 # En Passant
-                if gameState.enPassantSquare == (row + direction, capture_col):
-                    moves.append((row + direction, capture_col))
+                if gameState.enPassantSquare == (row + direction, captureCol):
+                    moves.append((row + direction, captureCol))
 
         # Rook moves
     elif piece.lower() == "r":
@@ -173,8 +173,8 @@ def getLegalMoves(gameState, position, piece, whiteTurn):
                     break
 
     elif piece.lower() == "n":  # Knight moves
-        knight_moves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
-        for dr, dc in knight_moves:
+        knightMoves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
+        for dr, dc in knightMoves:
             newRow, newCol = row + dr, col + dc
             if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
                 moves.append((newRow, newCol))
@@ -228,7 +228,6 @@ def getLegalMoves(gameState, position, piece, whiteTurn):
     return moves
 
 def performCastle(gameState, start, end):
-    """Perform castling move."""
     startRow, startCol = start
     endRow, endCol = end
     board = gameState.board
@@ -264,7 +263,7 @@ def drawTurnIndicator(win, whiteTurn):
 
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("MagnusAI")
+    pygame.display.set_caption("?Chess?")
     clock = pygame.time.Clock()
     images = loadPieceAssets()
 
