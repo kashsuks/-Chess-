@@ -51,29 +51,11 @@ def loadPieceAssets():
         )
     return images
 
-def drawBoard(win, whiteTurn):
-    active_white, active_black = (240, 217, 181), (181, 136, 99)
-    dull_white, dull_black = (200, 200, 200), (160, 160, 160)
-
-    white_color = active_white if whiteTurn else dull_white
-    black_color = active_black if whiteTurn else dull_black
-
+def drawBoard(win):
     for row in range(ROWS):
         for col in range(COLS):
-            color = white_color if (row + col) % 2 == 0 else black_color
-            pygame.draw.rect(win, color, ((col * SQUARE_SIZE), row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-            
-def drawPlayerAreaHighlightBurst(win, whiteTurn):
-    """Draw a short burst of highlight for the current player."""
-    highlight_surface = pygame.Surface((WIDTH, HEIGHT // 2), pygame.SRCALPHA)
-    highlight_color = (255, 255, 255, 180) if whiteTurn else (100, 100, 100, 180)
-    highlight_surface.fill(highlight_color)
-
-    position = (0, HEIGHT // 2) if whiteTurn else (0, 0)
-    win.blit(highlight_surface, position)
-
-    pygame.display.update()
-    pygame.time.delay(300)
+            color = WHITE if (row + col) % 2 == 0 else BLACK
+            pygame.draw.rect(win, color, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
 def drawPieces(win, board, images):
     for row in range(ROWS):
@@ -351,11 +333,7 @@ def main():
 
         # Drawing the game components
         win.fill(BACKGROUND_GRAY)
-        drawBoard(win, gameState.whiteTurn)
-
-        # Manage the highlight burst based on elapsed time
-        if highlight_start_time is not None and current_time - highlight_start_time <= highlight_duration:
-            drawPlayerAreaHighlightBurst(win, gameState.whiteTurn)
+        drawBoard(win)
 
         drawPieces(win, board, images)
 
