@@ -200,6 +200,15 @@ def getLegalMoves(gameState, position, piece, whiteTurn):
             newRow, newCol = row + dr, col + dc
             if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
                 moves.append((newRow, newCol))
+    
+    # Castling moves
+        if (whiteTurn and not gameState.whiteKingMoved) or (not whiteTurn and not gameState.blackKingMoved):
+            # Kingside castle
+            if isValidCastle(gameState, (row, col), (row, col + 2)):
+                moves.append((row, col + 2))
+            # Queenside castle
+            if isValidCastle(gameState, (row, col), (row, col - 2)):
+                moves.append((row, col - 2))
                 
     return moves
 
