@@ -7,8 +7,6 @@ ROWS, COLS = 8, 8
 SQUARE_SIZE = WIDTH // COLS
 
 WHITE, BLACK = (240, 217, 181), (181, 136, 99)
-LIGHT_HIGHLIGHT = (255, 255, 255, 128)  # Translucent white
-DARK_HIGHLIGHT = (0, 0, 0, 128)  # Translucent black
 BACKGROUND_GRAY = (200, 200, 200)
 
 PIECE_IMAGES = {
@@ -202,16 +200,7 @@ def getLegalMoves(gameState, position, piece, whiteTurn):
             newRow, newCol = row + dr, col + dc
             if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
                 moves.append((newRow, newCol))
-
-        # Castling moves
-        if (whiteTurn and not gameState.whiteKingMoved) or (not whiteTurn and not gameState.blackKingMoved):
-            # Kingside castle
-            if isValidCastle(gameState, (row, col), (row, col + 2)):
-                moves.append((row, col + 2))
-            # Queenside castle
-            if isValidCastle(gameState, (row, col), (row, col - 2)):
-                moves.append((row, col - 2))
-
+                
     return moves
 
 def performCastle(gameState, start, end):
@@ -320,7 +309,7 @@ def main():
     running = True
     gameOver = False
     while running:
-        current_time = pygame.time.get_ticks()  # Get the current time in milliseconds
+        current_time = pygame.time.get_ticks()  # Time in ms
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
