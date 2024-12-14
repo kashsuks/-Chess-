@@ -306,7 +306,7 @@ def drawGameOver(win, isWhite):
 
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Chess")
+    pygame.display.set_caption("?Chess?")
     clock = pygame.time.Clock()
     images = loadPieceAssets()
 
@@ -316,10 +316,6 @@ def main():
     selectedPiece = None
     selectedPosition = None
     legalMoves = []
-
-    # Highlight burst timing variables
-    highlight_start_time = None
-    highlight_duration = 300  # milliseconds
 
     running = True
     gameOver = False
@@ -410,12 +406,6 @@ def main():
             row, col = kingPosition
             if kingInCheck:  # Only highlight in red if the king is under attack (in check)
                 pygame.draw.rect(win, (255, 0, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
-
-        # Highlight burst after move
-        if highlight_start_time and current_time - highlight_start_time < highlight_duration:
-            for move in legalMoves:
-                row, col = move
-                pygame.draw.rect(win, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
 
         if gameOver:
             drawGameOver(win, isWhite)
