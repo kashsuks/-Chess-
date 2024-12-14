@@ -253,6 +253,16 @@ def findKingPosition(board, isWhite):
                 return (row, col)
     return None
 
+def isSquareUnderAttack(gameState, position, isWhite):
+    row, col = position
+    opponentMoves = []
+    for r in range(ROWS):
+        for c in range(COLS):
+            piece = gameState.board[r][c]
+            if (piece.isupper() and not isWhite) or (piece.islower() and isWhite):
+                opponentMoves.extend(getLegalMoves(gameState, (r, c), piece, not isWhite))
+    return position in opponentMoves
+
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("?Chess?")
