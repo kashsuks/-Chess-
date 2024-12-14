@@ -263,6 +263,34 @@ def isSquareUnderAttack(gameState, position, isWhite):
                 opponentMoves.extend(getLegalMoves(gameState, (r, c), piece, not isWhite))
     return position in opponentMoves
 
+def isCheckmate(gameState, isWhite):
+    kingPosition = findKingPosition(gameState.board, isWhite)
+    
+    if not kingPosition:
+        return False
+
+    if not isSquareUnderAttack(gameState, kingPosition, isWhite):
+        return False
+
+    for row in range(ROWS):
+        for col in range(COLS):
+            piece = gameState.board[row][col]
+            if (piece.isupper() and isWhite) or (piece.islower() and not isWhite):
+                moves = getLegalMoves(gameState, (row, col), piece, isWhite)
+                for move in moves:
+                    oldPiece = gameState.board[move[0]][move[1]]
+                    gameState.board[move[0]][move[1]] = piece
+                    gameState.board[row][col] = "."
+
+                    kingSafe = not isSquareUnderAttack(gameState, findKingPosition(gameState.board, isWhite), isWhite)
+
+                    gameState.board[row][col] = piece
+                    gameState.board[move[0]][move[1]] = oldPiece
+
+                    if kingSafe:
+                        return False
+    return True
+
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("?Chess?")
