@@ -247,8 +247,8 @@ def drawTurnIndicator(win, whiteTurn):
     
 def findKingPosition(board, isWhite):
     king = "K" if isWhite else "k"
-    for row in range[ROWS]:
-        for col in range[COLS]:
+    for row in range(ROWS):
+        for col in range(COLS):
             if board[row][col] == king:
                 return (row, col)
     return None
@@ -408,8 +408,8 @@ def main():
 
         if kingPosition:
             row, col = kingPosition
-            color = (255, 0, 0, 150) if kingInCheck else (0, 255, 0, 150)
-            pygame.draw.rect(win, color, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
+            if kingInCheck:  # Only highlight in red if the king is under attack (in check)
+                pygame.draw.rect(win, (255, 0, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
 
         # Highlight burst after move
         if highlight_start_time and current_time - highlight_start_time < highlight_duration:
