@@ -291,6 +291,19 @@ def isCheckmate(gameState, isWhite):
                         return False
     return True
 
+def drawGameOver(win, isWhite):
+    overlayColor = (0, 0, 0, 150)
+    fontColor = (255, 255, 255)
+    font = pygame.font.SysFont("Arial", 48)
+    text = "White Wins!" if not isWhite else "Black Wins!"
+
+    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    overlay.fill(overlayColor)
+    win.blit(overlay, (0, 0))
+
+    textSurface = font.render(text, True, fontColor)
+    win.blit(textSurface, (WIDTH // 2 - textSurface.get_width() // 2, HEIGHT // 2 - textSurface.get_height() // 2))
+
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("?Chess?")
