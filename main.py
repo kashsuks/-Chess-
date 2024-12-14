@@ -306,7 +306,7 @@ def drawGameOver(win, isWhite):
 
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("?Chess?")
+    pygame.display.set_caption("Chess")
     clock = pygame.time.Clock()
     images = loadPieceAssets()
 
@@ -322,13 +322,14 @@ def main():
     highlight_duration = 300  # milliseconds
 
     running = True
+    gameOver = False
     while running:
         current_time = pygame.time.get_ticks()  # Get the current time in milliseconds
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if not gameOver and event.type == pygame.MOUSEBUTTONDOWN:
                 mousePosition = pygame.mouse.get_pos()
                 square = findCurrentSquare(board, mousePosition)
                 if square:
@@ -338,7 +339,7 @@ def main():
                         selectedPosition = (row, col)
                         legalMoves = getLegalMoves(gameState, selectedPosition, selectedPiece, gameState.whiteTurn)
 
-            if event.type == pygame.MOUSEBUTTONUP:
+            if not gameOver and event.type == pygame.MOUSEBUTTONUP:
                 mousePosition = pygame.mouse.get_pos()
                 square = findCurrentSquare(board, mousePosition)
                 if square and selectedPiece:
@@ -388,16 +389,36 @@ def main():
                     selectedPosition = None
                     legalMoves = []
 
+        # Check for check and checkmate
+        isWhite = gameState.whiteTurn
+        kingPosition = findKingPosition(board, isWhite)
+        kingInCheck = isSquareUnderAttack(gameState, kingPosition, isWhite)
+        if kingInCheck and isCheckmate(gameState, isWhite):
+            gameOver = True
+
         # Drawing the game components
         win.fill(BACKGROUND_GRAY)
         drawBoard(win)
-
         drawPieces(win, board, images)
 
         if selectedPosition:
             row, col = selectedPosition
             pygame.draw.rect(win, (255, 0, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
             highlightLegalMoves(win, legalMoves)
+
+        if kingPosition:
+            row, col = kingPosition
+            color = (255, 0, 0, 150) if kingInCheck else (0, 255, 0, 150)
+            pygame.draw.rect(win, color, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
+
+        # Highlight burst after move
+        if highlight_start_time and current_time - highlight_start_time < highlight_duration:
+            for move in legalMoves:
+                row, col = move
+                pygame.draw.rect(win, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
+
+        if gameOver:
+            drawGameOver(win, isWhite)
 
         pygame.display.update()
         clock.tick(60)
