@@ -228,12 +228,10 @@ def performCastle(gameState, start, end):
         board[startRow][startCol - 1] = board[startRow][0]
         board[startRow][0] = "."
 
-def performEnPassant(gameState, start, end):
+def enPassant(gameState, start, end):
     startRow, startCol = start
     endRow, endCol = end
     board = gameState.board
-
-    # Remove the captured pawn (which is on the start row)
     board[startRow][endCol] = "."
 
 def highlightLegalMoves(win, moves):
@@ -246,6 +244,14 @@ def highlightLegalMoves(win, moves):
 def drawTurnIndicator(win, whiteTurn):
     indicatorColor = (255, 255, 255) if whiteTurn else (0, 0, 0)
     pygame.draw.circle(win, indicatorColor, (WIDTH - 50, HEIGHT - 50), 20)
+    
+def findKingPosition(board, isWhite):
+    king = "K" if isWhite else "k"
+    for row in range[ROWS]:
+        for col in range[COLS]:
+            if board[row][col] == king:
+                return (row, col)
+    return None
 
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -292,7 +298,7 @@ def main():
 
                         # Handle en passant
                         if (selectedPiece.lower() == "p" and gameState.enPassantSquare == (newRow, newCol)):
-                            performEnPassant(gameState, selectedPosition, (newRow, newCol))
+                            enPassant(gameState, selectedPosition, (newRow, newCol))
 
                         # Handle castling
                         if selectedPiece.lower() == "k" and abs(newCol - oldCol) == 2:
