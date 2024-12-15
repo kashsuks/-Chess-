@@ -324,18 +324,6 @@ def drawGameOver(win, isWhite):
     win.blit(textSurface, (WIDTH // 2 - textSurface.get_width() // 2, HEIGHT // 2 - textSurface.get_height() // 2))
 
 def makeMove(gameState, start, end, selectedPiece):
-    """
-    Makes a move on the chessboard.
-
-    Args:
-      gameState: The current state of the game.
-      start: The starting position of the piece (row, col).
-      end: The ending position of the piece (row, col).
-      selectedPiece: The piece being moved.
-
-    Returns:
-      None
-    """
     global selectedPosition
     startRow, startCol = start
     endRow, endCol = end
@@ -397,7 +385,7 @@ def getUserPromotionChoice(isWhite):
 
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("?Chess?")
+    pygame.display.set_caption("Chess Unknown")
     clock = pygame.time.Clock()
     images = loadPieceAssets()
 
