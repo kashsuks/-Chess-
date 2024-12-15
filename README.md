@@ -1,2 +1,2 @@
 # ?Chess?
-A chess engine based off of Magnus Carlsen
+A chess engine with a twist
