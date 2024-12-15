@@ -1,6 +1,6 @@
 import pygame
-
-pygame.init()
+import socket
+import threading
 
 # Constants
 WIDTH, HEIGHT = 800, 800
@@ -29,7 +29,6 @@ START_POSITION = [
     ["R", "N", "B", "Q", "K", "B", "N", "R"],
 ]
 
-
 class GameState:
     def __init__(self):
         self.board = [row[:] for row in START_POSITION]
@@ -41,6 +40,13 @@ class GameState:
         self.blackRookKingsideMoved = False
         self.blackRookQueensideMoved = False
         self.enPassantSquare = None
+
+    def __str__(self):
+        """Returns a string representation of the board."""
+        board_str = ""
+        for row in self.board:
+            board_str += " ".join(row) + "\n"
+        return board_str
 
 def isMoveSafe(gameState, start, end, piece, whiteTurn):
     testBoard = [row[:] for row in gameState.board]
@@ -55,7 +61,7 @@ def isMoveSafe(gameState, start, end, piece, whiteTurn):
     testState.board = testBoard
     testState.whiteTurn = gameState.whiteTurn
     
-    kingPosition = findKingPosition(testBoard, whiteTurn)
+    kingPosition = findKingPosition(testState.board, whiteTurn)
     
     return not (kingPosition and isSquareUnderAttack(testState, kingPosition, whiteTurn))
 
@@ -157,12 +163,12 @@ def initialLegalMoves(gameState, position, piece, whiteTurn):
                     break
 
     elif piece.lower() == "k":
-        kingMoves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-        for dr, dc in kingMoves:
-            newRow, newCol = row + dr, col + dc
-            if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
-                moves.append((newRow, newCol))
-
+    kingMoves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+    for dr, dc in kingMoves:
+        newRow, newCol = row + dr, col + dc
+        if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
+            moves.append((newRow, newCol))
+    
         if (whiteTurn and not gameState.whiteKingMoved) or (not whiteTurn and not gameState.blackKingMoved):
             # Kingside castle
             if isValidCastle(gameState, (row, col), (row, col + 2)):
@@ -250,8 +256,7 @@ def enPassant(gameState, start, end):
     startRow, startCol = start
     endRow, endCol = end
     board = gameState.board
-    captureRow = startRow 
-    board[captureRow][endCol] = "."
+    board[startRow][endCol] = "."
 
 def highlightLegalMoves(win, moves):
     for move in moves:
@@ -323,77 +328,47 @@ def drawGameOver(win, isWhite):
     textSurface = font.render(text, True, fontColor)
     win.blit(textSurface, (WIDTH // 2 - textSurface.get_width() // 2, HEIGHT // 2 - textSurface.get_height() // 2))
 
-def makeMove(gameState, start, end, selectedPiece):
-    """
-    Makes a move on the chessboard.
+def handle_client(conn, addr):
+    """Handles communication with a connected client."""
+    try:
+        while True:
+            data = conn.recv(1024).decode()
+            if not data:
+                break
 
-    Args:
-      gameState: The current state of the game.
-      start: The starting position of the piece (row, col).
-      end: The ending position of the piece (row, col).
-      selectedPiece: The piece being moved.
+            if data.startswith("MOVE"):
+                source, target = data.split(":")[1:]
+                source_row, source_col = map(int, source.split(","))
+                target_row, target_col = map(int, target.split(","))
 
-    Returns:
-      None
-    """
-    global selectedPosition
-    startRow, startCol = start
-    endRow, endCol = end
-    board = gameState.board
+                # Make the move on the local board
+                # ... (Code to update the local board with the received move) ...
 
-    # Handle en passant
-    if (selectedPiece.lower() == "p" and gameState.enPassantSquare == (endRow, endCol)):
-        enPassant(gameState, selectedPosition, (endRow, endCol))
+            elif data.startswith("STATE"):
+                # Update the local game state from the received data
+                # ... (Code to update the local game state) ...
 
-    # Handle castling
-    if selectedPiece.lower() == "k" and abs(endCol - startCol) == 2:
-        performCastle(gameState, (startRow, startCol), (endRow, endCol))
-    else:
-        board[startRow][startCol] = "."
-        board[endRow][endCol] = selectedPiece
+            # ... (Handle other types of data, if needed) ...
 
-    if selectedPiece == "K":
-        gameState.whiteKingMoved = True
-    elif selectedPiece == "k":
-        gameState.blackKingMoved = True
+        conn.close()
+    except:
+        pass
 
-    # Promotion handling
-    if selectedPiece.lower() == "p" and (endRow == 0 or endRow == 7):
-        promotePiece(gameState, endRow, endCol)
+def multiplayer_mode():
+    """Starts the multiplayer mode."""
+    host = '127.0.0.1'  # Replace with the actual host IP address
+    port = 5000
 
-    # Update rook movement flags for castling
-    if selectedPiece == "R" and startCol == 0:
-        gameState.whiteRookQueensideMoved = True
-    elif selectedPiece == "R" and startCol == 7:
-        gameState.whiteRookKingsideMoved = True
-    elif selectedPiece == "r" and startCol == 0:
-        gameState.blackRookQueensideMoved = True
-    elif selectedPiece == "r" and startCol == 7:
-        gameState.blackRookKingsideMoved = True
-
-    # Set up en passant possibility for two-square pawn moves
-    if selectedPiece.lower() == "p" and abs(endRow - startRow) == 2:
-        gameState.enPassantSquare = ((startRow + endRow) // 2, startCol)
-    else:
-        gameState.enPassantSquare = None
-
-    gameState.whiteTurn = not gameState.whiteTurn
-
-def promotePiece(gameState, row, col):
-    isWhite = gameState.whiteTurn
-    promotionPiece = getUserPromotionChoice(isWhite)  # Call new function
-    gameState.board[row][col] = promotionPiece
-
-def getUserPromotionChoice(isWhite):
-    # This function should display a menu or prompt the user to choose a promotion piece (Queen, Rook, Bishop, Knight)
-    # Based on user input, return the chosen promotion piece (e.g., "Q", "R", "B", "N")
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind((host, port))
+    server_socket.listen()
+    print(f"Server started on {host}:{port}")
 
     while True:
-        choice = input("Promote pawn to (Q, R, B, N): ").upper()
-        if choice in ("Q", "R", "B", "N"):
-            return choice
-        else:
-            print("Invalid choice. Please enter Q, R, B, or N.")
+        conn, addr = server_socket.accept()
+        print(f"Connected by {addr}")
+        thread = threading.Thread(target=handle_client, args=(conn, addr))
+        thread.start()
 
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -410,59 +385,103 @@ def main():
 
     running = True
     gameOver = False
-    while running:
-        currTime = pygame.time.get_ticks()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+    multiplayer_mode_selected = True  # Set to True for multiplayer mode
 
-            if not gameOver and event.type == pygame.MOUSEBUTTONDOWN:
-                mousePosition = pygame.mouse.get_pos()
-                square = findCurrentSquare(board, mousePosition)
-                if square:
-                    row, col = square
-                    if board[row][col] != ".":
-                        selectedPiece = board[row][col]
-                        selectedPosition = (row, col)
-                        legalMoves = getLegalMoves(gameState, selectedPosition, selectedPiece, gameState.whiteTurn)
+    if multiplayer_mode_selected:
+        multiplayer_mode()
+    else:
+        # Single-player mode logic (as before)
+        while running:
+            currTime = pygame.time.get_ticks()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
-            if not gameOver and event.type == pygame.MOUSEBUTTONUP:
-                mousePosition = pygame.mouse.get_pos()
-                square = findCurrentSquare(board, mousePosition)
-                if square and selectedPiece:
-                    newRow, newCol = square
+                if not gameOver and event.type == pygame.MOUSEBUTTONDOWN:
+                    mousePosition = pygame.mouse.get_pos()
+                    square = findCurrentSquare(board, mousePosition)
+                    if square:
+                        row, col = square
+                        if board[row][col] != ".":
+                            selectedPiece = board[row][col]
+                            selectedPosition = (row, col)
+                            legalMoves = getLegalMoves(gameState, selectedPosition, selectedPiece, gameState.whiteTurn)
 
-                    if (newRow, newCol) in legalMoves:
-                        makeMove(gameState, selectedPosition, (newRow, newCol), selectedPiece)  # Use makeMove with promotion handling
-                        selectedPiece = None
-                        selectedPosition = None
-                        legalMoves = []
+                if not gameOver and event.type == pygame.MOUSEBUTTONUP:
+                    mousePosition = pygame.mouse.get_pos()
+                    square = findCurrentSquare(board, mousePosition)
+                    if square and selectedPiece:
+                        newRow, newCol = square
 
-        isWhite = gameState.whiteTurn
-        kingPosition = findKingPosition(board, isWhite)
-        kingInCheck = isSquareUnderAttack(gameState, kingPosition, isWhite)
-        if kingInCheck and isCheckmate(gameState, isWhite):
-            gameOver = True
+                        if (newRow, newCol) in legalMoves:
+                            oldRow, oldCol = selectedPosition
 
-        win.fill(BACKGROUND_GRAY)
-        drawBoard(win)
-        drawPieces(win, board, images)
+                            # Handle en passant
+                            if (selectedPiece.lower() == "p" and gameState.enPassantSquare == (newRow, newCol)):
+                                enPassant(gameState, selectedPosition, (newRow, newCol))
 
-        if selectedPosition:
-            row, col = selectedPosition
-            pygame.draw.rect(win, (255, 0, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
-            highlightLegalMoves(win, legalMoves)
+                            # Handle castling
+                            if selectedPiece.lower() == "k" and abs(newCol - oldCol) == 2:
+                                performCastle(gameState, (oldRow, oldCol), (newRow, newCol))
 
-        if kingPosition:
-            row, col = kingPosition
-            if kingInCheck:
+                            board[oldRow][oldCol] = "."
+                            board[newRow][newCol] = selectedPiece
+
+                            if selectedPiece == "K":
+                                gameState.whiteKingMoved = True
+                            elif selectedPiece == "k":
+                                gameState.blackKingMoved = True
+                            
+                            if selectedPiece == "R" and oldCol == 0:
+                                gameState.whiteRookQueensideMoved = True
+                            elif selectedPiece == "R" and oldCol == 7:
+                                gameState.whiteRookKingsideMoved = True
+                            elif selectedPiece == "r" and oldCol == 0:
+                                gameState.blackRookQueensideMoved = True
+                            elif selectedPiece == "r" and oldCol == 7:
+                                gameState.blackRookKingsideMoved = True
+
+                            # Set up en passant possibility for two-square pawn moves
+                            if selectedPiece.lower() == "p" and abs(newRow - oldRow) == 2:
+                                gameState.enPassantSquare = ((oldRow + newRow) // 2, oldCol)
+                            else:
+                                gameState.enPassantSquare = None
+
+                            gameState.whiteTurn = not gameState.whiteTurn
+                            startTime = currTime
+
+                            # Send the move to the other player (in multiplayer mode)
+                            # ... (Code to send the move over the network) ...
+
+                    selectedPiece = None
+                    selectedPosition = None
+                    legalMoves = []
+
+            isWhite = gameState.whiteTurn
+            kingPosition = findKingPosition(board, isWhite)
+            kingInCheck = isSquareUnderAttack(gameState, kingPosition, isWhite)
+            if kingInCheck and isCheckmate(gameState, isWhite):
+                gameOver = True
+
+            win.fill(BACKGROUND_GRAY)
+            drawBoard(win)
+            drawPieces(win, board, images)
+
+            if selectedPosition:
+                row, col = selectedPosition
                 pygame.draw.rect(win, (255, 0, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
+                highlightLegalMoves(win, legalMoves)
 
-        if gameOver:
-            drawGameOver(win, isWhite)
+            if kingPosition:
+                row, col = kingPosition
+                if kingInCheck:
+                    pygame.draw.rect(win, (255, 0, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
 
-        pygame.display.update()
-        clock.tick(60)
+            if gameOver:
+                drawGameOver(win, isWhite)
+
+            pygame.display.update()
+            clock.tick(60)
 
     pygame.quit()
 
