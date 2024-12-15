@@ -1,5 +1,0 @@
-What makes the game interesting
-
-You dont know what piece you selected until you move it
-
-ie If you selected a pawn you dont know if its a king until you move it
