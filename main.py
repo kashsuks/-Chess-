@@ -2,10 +2,10 @@ import pygame
 
 pygame.init()
 
+#Constants
 WIDTH, HEIGHT = 800, 800
 ROWS, COLS = 8, 8
 SQUARE_SIZE = WIDTH // COLS
-
 WHITE, BLACK = (240, 217, 181), (181, 136, 99)
 BACKGROUND_GRAY = (200, 200, 200)
 
@@ -41,6 +41,137 @@ class GameState:
         self.blackRookQueensideMoved = False
         self.enPassantSquare = None
 
+def isMoveSafe(gameState, start, end, piece, whiteTurn):
+    testBoard = [row[:] for row in gameState.board]
+    
+    startRow, startCol = start
+    endRow, endCol = end
+    
+    testBoard[endRow][endCol] = piece
+    testBoard[startRow][startCol] = "."
+    
+    testState = GameState()
+    testState.board = testBoard
+    testState.whiteTurn = gameState.whiteTurn
+    
+    kingPosition = findKingPosition(testBoard, whiteTurn)
+    
+    return not (kingPosition and isSquareUnderAttack(testState, kingPosition, whiteTurn))
+
+def getLegalMoves(gameState, position, piece, whiteTurn):
+    initialMoves = initialLegalMoves(gameState, position, piece, whiteTurn)
+    
+    safeMoves = [
+        move for move in initialMoves 
+        if isMoveSafe(gameState, position, move, piece, whiteTurn)
+    ]
+    
+    return safeMoves
+
+def initialLegalMoves(gameState, position, piece, whiteTurn):
+    if (whiteTurn and piece.islower()) or (not whiteTurn and piece.isupper()):
+        return []
+
+    row, col = position
+    board = gameState.board
+    moves = []
+
+    if piece.lower() == "p":
+        direction = -1 if piece.isupper() else 1
+        if 0 <= row + direction < ROWS and board[row + direction][col] == ".":
+            moves.append((row + direction, col))
+
+        if piece.isupper() and row == 6:  # White pawn (2nd rank)
+            if board[row + direction][col] == "." and board[row + 2 * direction][col] == ".":
+                moves.append((row + 2 * direction, col))
+        elif piece.islower() and row == 1:  # Black pawn (7th rank)
+            if board[row + direction][col] == "." and board[row + 2 * direction][col] == ".":
+                moves.append((row + 2 * direction, col))
+
+        captureCols = [col - 1, col + 1]
+        for captureCol in captureCols:
+            if 0 <= captureCol < COLS and 0 <= row + direction < ROWS:
+                # Normal capture
+                if board[row + direction][captureCol] != "." and board[row + direction][captureCol].islower() != piece.islower():
+                    moves.append((row + direction, captureCol))
+                
+                # En Passant
+                if gameState.enPassantSquare == (row + direction, captureCol):
+                    moves.append((row + direction, captureCol))
+
+    elif piece.lower() == "r":
+        for d in [-1, 1]:
+            for i in range(1, ROWS):
+                if 0 <= row + i * d < ROWS and board[row + i * d][col] == ".":
+                    moves.append((row + i * d, col))
+                elif 0 <= row + i * d < ROWS and board[row + i * d][col].islower() != piece.islower():
+                    moves.append((row + i * d, col))
+                    break
+                else:
+                    break
+            for i in range(1, COLS):
+                if 0 <= col + i * d < COLS and board[row][col + i * d] == ".":
+                    moves.append((row, col + i * d))
+                elif 0 <= col + i * d < COLS and board[row][col + i * d].islower() != piece.islower():
+                    moves.append((row, col + i * d))
+                    break
+                else:
+                    break
+
+    elif piece.lower() == "n":
+        knightMoves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
+        for dr, dc in knightMoves:
+            newRow, newCol = row + dr, col + dc
+            if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
+                moves.append((newRow, newCol))
+
+    elif piece.lower() == "b":
+        for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+            for i in range(1, ROWS):
+                newRow, newCol = row + i * dr, col + i * dc
+                if 0 <= newRow < ROWS and 0 <= newCol < COLS:
+                    if board[newRow][newCol] == ".":
+                        moves.append((newRow, newCol))
+                    elif board[newRow][newCol].islower() != piece.islower():
+                        moves.append((newRow, newCol))
+                        break
+                    else:
+                        break
+                else:
+                    break
+
+    elif piece.lower() == "q":
+        for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+            for i in range(1, ROWS):
+                newRow, newCol = row + i * dr, col + i * dc
+                if 0 <= newRow < ROWS and 0 <= newCol < COLS:
+                    if board[newRow][newCol] == ".":
+                        moves.append((newRow, newCol))
+                    elif board[newRow][newCol].islower() != piece.islower():
+                        moves.append((newRow, newCol))
+                        break
+                    else:
+                        break
+                else:
+                    break
+
+    elif piece.lower() == "k":
+        kingMoves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        for dr, dc in kingMoves:
+            newRow, newCol = row + dr, col + dc
+            if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
+                moves.append((newRow, newCol))
+    
+        if (whiteTurn and not gameState.whiteKingMoved) or (not whiteTurn and not gameState.blackKingMoved):
+            # Kingside castle
+            if isValidCastle(gameState, (row, col), (row, col + 2)):
+                moves.append((row, col + 2))
+            # Queenside castle
+            if isValidCastle(gameState, (row, col), (row, col - 2)):
+                moves.append((row, col - 2))
+                
+    return moves
+
 def loadPieceAssets():
     images = {}
     for piece, imgFile in PIECE_IMAGES.items():
@@ -70,17 +201,14 @@ def findCurrentSquare(board, mousePosition):
     return None
 
 def isValidCastle(gameState, start, end):
-    """Check if castling move is valid."""
     startRow, startCol = start
     endRow, endCol = end
     board = gameState.board
     piece = board[startRow][startCol]
 
-    # Is it a kingside or queenside castle?
     isKingsideCastle = endCol > startCol
     isWhite = piece.isupper()
 
-    # Check the status of the king and rook
     if isWhite:
         if gameState.whiteKingMoved:
             return False
@@ -96,121 +224,12 @@ def isValidCastle(gameState, start, end):
         if not isKingsideCastle and gameState.blackRookQueensideMoved:
             return False
 
-    # Check if the path between king and rook is clear
     colRange = range(startCol + 1, 7) if isKingsideCastle else range(1, startCol)
     for col in colRange:
         if board[startRow][col] != ".":
             return False
 
     return True
-
-def getLegalMoves(gameState, position, piece, whiteTurn):
-    if (whiteTurn and piece.islower()) or (not whiteTurn and piece.isupper()):
-        return []
-
-    row, col = position
-    board = gameState.board
-    moves = []
-
-    if piece.lower() == "p":  # Pawn moves
-        direction = -1 if piece.isupper() else 1
-        if 0 <= row + direction < ROWS and board[row + direction][col] == ".":
-            moves.append((row + direction, col))
-
-        # Initial two-square move
-        if piece.isupper() and row == 6:  # White pawn (2nd rank)
-            if board[row + direction][col] == "." and board[row + 2 * direction][col] == ".":
-                moves.append((row + 2 * direction, col))
-        elif piece.islower() and row == 1:  # Black pawn (7th rank)
-            if board[row + direction][col] == "." and board[row + 2 * direction][col] == ".":
-                moves.append((row + 2 * direction, col))
-
-        # Capture moves
-        captureCols = [col - 1, col + 1]
-        for captureCol in captureCols:
-            if 0 <= captureCol < COLS and 0 <= row + direction < ROWS:
-                # Normal capture
-                if board[row + direction][captureCol] != "." and board[row + direction][captureCol].islower() != piece.islower():
-                    moves.append((row + direction, captureCol))
-                
-                # En Passant
-                if gameState.enPassantSquare == (row + direction, captureCol):
-                    moves.append((row + direction, captureCol))
-
-        # Rook moves
-    elif piece.lower() == "r":
-        for d in [-1, 1]:
-            for i in range(1, ROWS):
-                if 0 <= row + i * d < ROWS and board[row + i * d][col] == ".":
-                    moves.append((row + i * d, col))
-                elif 0 <= row + i * d < ROWS and board[row + i * d][col].islower() != piece.islower():
-                    moves.append((row + i * d, col))
-                    break
-                else:
-                    break
-            for i in range(1, COLS):
-                if 0 <= col + i * d < COLS and board[row][col + i * d] == ".":
-                    moves.append((row, col + i * d))
-                elif 0 <= col + i * d < COLS and board[row][col + i * d].islower() != piece.islower():
-                    moves.append((row, col + i * d))
-                    break
-                else:
-                    break
-
-    elif piece.lower() == "n":  # Knight moves
-        knightMoves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
-        for dr, dc in knightMoves:
-            newRow, newCol = row + dr, col + dc
-            if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
-                moves.append((newRow, newCol))
-
-    elif piece.lower() == "b":  # Bishop moves
-        for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
-            for i in range(1, ROWS):
-                newRow, newCol = row + i * dr, col + i * dc
-                if 0 <= newRow < ROWS and 0 <= newCol < COLS:
-                    if board[newRow][newCol] == ".":
-                        moves.append((newRow, newCol))
-                    elif board[newRow][newCol].islower() != piece.islower():
-                        moves.append((newRow, newCol))
-                        break
-                    else:
-                        break
-                else:
-                    break
-
-    elif piece.lower() == "q":  # Queen moves
-        for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
-            for i in range(1, ROWS):
-                newRow, newCol = row + i * dr, col + i * dc
-                if 0 <= newRow < ROWS and 0 <= newCol < COLS:
-                    if board[newRow][newCol] == ".":
-                        moves.append((newRow, newCol))
-                    elif board[newRow][newCol].islower() != piece.islower():
-                        moves.append((newRow, newCol))
-                        break
-                    else:
-                        break
-                else:
-                    break
-
-    elif piece.lower() == "k":  # King moves
-        kingMoves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-        for dr, dc in kingMoves:
-            newRow, newCol = row + dr, col + dc
-            if 0 <= newRow < ROWS and 0 <= newCol < COLS and (board[newRow][newCol] == "." or board[newRow][newCol].islower() != piece.islower()):
-                moves.append((newRow, newCol))
-    
-    # Castling moves
-        if (whiteTurn and not gameState.whiteKingMoved) or (not whiteTurn and not gameState.blackKingMoved):
-            # Kingside castle
-            if isValidCastle(gameState, (row, col), (row, col + 2)):
-                moves.append((row, col + 2))
-            # Queenside castle
-            if isValidCastle(gameState, (row, col), (row, col - 2)):
-                moves.append((row, col - 2))
-                
-    return moves
 
 def performCastle(gameState, start, end):
     startRow, startCol = start
@@ -258,7 +277,8 @@ def isSquareUnderAttack(gameState, position, isWhite):
         for c in range(COLS):
             piece = gameState.board[r][c]
             if (piece.isupper() and not isWhite) or (piece.islower() and isWhite):
-                opponentMoves.extend(getLegalMoves(gameState, (r, c), piece, not isWhite))
+                initialMoves = initialLegalMoves(gameState, (r, c), piece, not isWhite)
+                opponentMoves.extend(initialMoves)
     return position in opponentMoves
 
 def isCheckmate(gameState, isWhite):
@@ -274,18 +294,17 @@ def isCheckmate(gameState, isWhite):
         for col in range(COLS):
             piece = gameState.board[row][col]
             if (piece.isupper() and isWhite) or (piece.islower() and not isWhite):
-                moves = getLegalMoves(gameState, (row, col), piece, isWhite)
+                moves = initialLegalMoves(gameState, (row, col), piece, isWhite)
                 for move in moves:
-                    oldPiece = gameState.board[move[0]][move[1]]
-                    gameState.board[move[0]][move[1]] = piece
-                    gameState.board[row][col] = "."
+                    testState = GameState()
+                    testState.board = [row[:] for row in gameState.board]
+                    testState.whiteTurn = gameState.whiteTurn
+                    
+                    testState.board[move[0]][move[1]] = piece
+                    testState.board[row][col] = "."
 
-                    kingSafe = not isSquareUnderAttack(gameState, findKingPosition(gameState.board, isWhite), isWhite)
-
-                    gameState.board[row][col] = piece
-                    gameState.board[move[0]][move[1]] = oldPiece
-
-                    if kingSafe:
+                    newKingPosition = findKingPosition(testState.board, isWhite)
+                    if newKingPosition and not isSquareUnderAttack(testState, newKingPosition, isWhite):
                         return False
     return True
 
@@ -318,7 +337,7 @@ def main():
     running = True
     gameOver = False
     while running:
-        current_time = pygame.time.get_ticks()  # Time in ms
+        currTime = pygame.time.get_ticks()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -350,11 +369,9 @@ def main():
                         if selectedPiece.lower() == "k" and abs(newCol - oldCol) == 2:
                             performCastle(gameState, (oldRow, oldCol), (newRow, newCol))
 
-                        # Move the piece
                         board[oldRow][oldCol] = "."
                         board[newRow][newCol] = selectedPiece
 
-                        # Update movement flags for king and rook
                         if selectedPiece == "K":
                             gameState.whiteKingMoved = True
                         elif selectedPiece == "k":
@@ -375,22 +392,19 @@ def main():
                         else:
                             gameState.enPassantSquare = None
 
-                        # Switch turns and trigger highlight burst
                         gameState.whiteTurn = not gameState.whiteTurn
-                        highlight_start_time = current_time
+                        startTime = currTime
 
                     selectedPiece = None
                     selectedPosition = None
                     legalMoves = []
 
-        # Check for check and checkmate
         isWhite = gameState.whiteTurn
         kingPosition = findKingPosition(board, isWhite)
         kingInCheck = isSquareUnderAttack(gameState, kingPosition, isWhite)
         if kingInCheck and isCheckmate(gameState, isWhite):
             gameOver = True
 
-        # Drawing the game components
         win.fill(BACKGROUND_GRAY)
         drawBoard(win)
         drawPieces(win, board, images)
@@ -402,7 +416,7 @@ def main():
 
         if kingPosition:
             row, col = kingPosition
-            if kingInCheck:  # Only highlight in red if the king is under attack (in check)
+            if kingInCheck:
                 pygame.draw.rect(win, (255, 0, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
 
         if gameOver:
