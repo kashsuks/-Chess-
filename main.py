@@ -3,7 +3,7 @@ import pygame
 pygame.init()
 
 # Constants
-WIDTH, HEIGHT = 800, 800
+WIDTH, HEIGHT = 900, 900
 ROWS, COLS = 8, 8
 SQUARE_SIZE = WIDTH // COLS
 WHITE, BLACK = (240, 217, 181), (181, 136, 99)
@@ -261,7 +261,7 @@ def highlightLegalMoves(win, moves):
         pygame.draw.circle(win, (0, 255, 0), (centerX, centerY), SQUARE_SIZE // 8)
 
 def drawTurnIndicator(win, whiteTurn):
-    indicatorColor = (255, 255, 255) if whiteTurn else (0, 0, 0)
+    indicatorColor = (255, 255, 255) if whiteTurn else (0, 0, 0)  # Complete the color tuple
     pygame.draw.circle(win, indicatorColor, (WIDTH - 50, HEIGHT - 50), 20)
     
 def findKingPosition(board, isWhite):
@@ -358,8 +358,8 @@ def makeMove(gameState, start, end, selectedPiece):
         gameState.blackRookQueensideMoved = True
     elif selectedPiece == "r" and startCol == 7:
         gameState.blackRookKingsideMoved = True
-
-    # Set up en passant possibility for two-square pawn moves
+        
+    #En Passant possibility
     if selectedPiece.lower() == "p" and abs(endRow - startRow) == 2:
         gameState.enPassantSquare = ((startRow + endRow) // 2, startCol)
     else:
@@ -369,19 +369,47 @@ def makeMove(gameState, start, end, selectedPiece):
 
 def promotePiece(gameState, row, col):
     isWhite = gameState.whiteTurn
-    promotionPiece = getUserPromotionChoice(isWhite)  # Call new function
+    promotionPiece = getUserPromotionChoice(gameState, row, col, isWhite)
     gameState.board[row][col] = promotionPiece
 
-def getUserPromotionChoice(isWhite):
-    # This function should display a menu or prompt the user to choose a promotion piece (Queen, Rook, Bishop, Knight)
-    # Based on user input, return the chosen promotion piece (e.g., "Q", "R", "B", "N")
+def getUserPromotionChoice(gameState, row, col, isWhite):
+    bubbleWidth = 50
+    bubbleHeight = 150
+    bubbleX = col * SQUARE_SIZE + (SQUARE_SIZE - bubbleWidth) // 2
+    bubbleY = row * SQUARE_SIZE + (SQUARE_SIZE - bubbleHeight) // 2
+
+    bubbleSurface = pygame.Surface((bubbleWidth, bubbleHeight), pygame.SRCALPHA)
+    bubbleSurface.fill((255, 255, 255, 180))
+
+    promotionPieces = ["Q", "R", "B", "N"]
+    promotionImages = {}
+    for piece in promotionPieces:
+        promotionImages[piece] = pygame.transform.scale(
+            pygame.image.load(f"pieces/w{piece}.png" if isWhite else f"pieces/b{piece}.png"),
+            (30, 30)
+        )
+
+    piece_spacing = 1
+    startX = (bubbleWidth - 50) // 2
+    startY = 5
+
+    for i, piece in enumerate(promotionPieces):
+        bubbleSurface.blit(promotionImages[piece], (startX, startY + i * (50 + piece_spacing)))
+
+    screen = pygame.display.get_surface()
+    screen.blit(bubbleSurface, (bubbleX, bubbleY))
+    pygame.display.update()
 
     while True:
-        choice = input("Promote pawn to (Q, R, B, N): ").upper()
-        if choice in ("Q", "R", "B", "N"):
-            return choice
-        else:
-            print("Invalid choice. Please enter Q, R, B, or N.")
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mousePos = pygame.mouse.get_pos()
+                if bubbleX <= mousePos[0] <= bubbleX + bubbleWidth and bubbleY <= mousePos[1] <= bubbleY + bubbleHeight:
+                    relativeY = mousePos[1] - bubbleY - startY
+                    pieceIndex = relativeY // (50 + piece_spacing)
+                    return promotionPieces[pieceIndex]
+
+        pygame.display.update()
 
 def main():
     win = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -399,7 +427,6 @@ def main():
     running = True
     gameOver = False
     while running:
-        currTime = pygame.time.get_ticks()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -421,7 +448,7 @@ def main():
                     newRow, newCol = square
 
                     if (newRow, newCol) in legalMoves:
-                        makeMove(gameState, selectedPosition, (newRow, newCol), selectedPiece)  # Use makeMove with promotion handling
+                        makeMove(gameState, selectedPosition, (newRow, newCol), selectedPiece)
                         selectedPiece = None
                         selectedPosition = None
                         legalMoves = []
