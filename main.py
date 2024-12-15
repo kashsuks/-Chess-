@@ -8,7 +8,6 @@ ROWS, COLS = 8, 8
 SQUARE_SIZE = WIDTH // COLS
 WHITE, BLACK = (240, 217, 181), (181, 136, 99)
 BACKGROUND_GRAY = (200, 200, 200)
-PROMOTION_CHOICES = {"Q": "Queen", "R": "Rook", "N": "Knight", "B": "Bishop"}
 
 PIECE_IMAGES = {
     "P": "pieces/wp.png", "p": "pieces/bp.png",  # Pawn
@@ -309,28 +308,6 @@ def isCheckmate(gameState, isWhite):
                         return False
     return True
 
-def promotePawn(win, isWhite):
-    font = pygame.font.SysFont("Arial", 24)
-    prompt = font.render("Promote to (Q, R, N, B):", True, (0, 0, 0))
-    win.blit(prompt, (10, HEIGHT - 100))
-
-    promotionChoice = None
-    pygame.display.update()
-
-    waiting = True
-    while waiting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return None
-            if event.type == pygame.KEYDOWN:
-                key = event.unicode.upper()
-                if key in PROMOTION_CHOICES:
-                    promotionChoice = key if isWhite else key.lower()
-                    waiting = False
-                    break
-
-    return promotionChoice
-
 def drawGameOver(win, isWhite):
     overlayColor = (0, 0, 0, 150)
     fontColor = (255, 255, 255)
@@ -384,22 +361,9 @@ def main():
                     if (newRow, newCol) in legalMoves:
                         oldRow, oldCol = selectedPosition
 
-                        if selectedPiece.lower() == "p":
-                            if (selectedPiece == "P" and newRow == 0) or (selectedPiece == "p" and newRow == ROWS - 1):
-                                promotionPiece = promotePawn(win, selectedPiece.isupper())
-                                if promotionPiece:
-                                    # Ensure the promotion piece matches the color of the original pawn
-                                    board[newRow][newCol] = promotionPiece
-                            else:
-                                board[newRow][newCol] = selectedPiece
-
-                            # Handle en passant
-                            if abs(newRow - oldRow) == 2:
-                                gameState.enPassantSquare = ((oldRow + newRow) // 2, oldCol)
-                            else:
-                                gameState.enPassantSquare = None
-                        else:
-                            board[newRow][newCol] = selectedPiece
+                        # Handle en passant
+                        if (selectedPiece.lower() == "p" and gameState.enPassantSquare == (newRow, newCol)):
+                            enPassant(gameState, selectedPosition, (newRow, newCol))
 
                         # Handle castling
                         if selectedPiece.lower() == "k" and abs(newCol - oldCol) == 2:
