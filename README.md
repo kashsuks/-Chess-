@@ -6,7 +6,7 @@ This is a simple, two-player chess engine built in Python. The game is designed 
 ## Features
 - Player vs Player mode.
 - Standard chess rules applied for both movement and gameplay.
-- Simple text-based user interface (CLI) for moves and game state display.
+- Easy to use GUI
 - Move input validation to ensure that only legal moves are made.
 
 ## Installation
