@@ -17,7 +17,7 @@ PIECE_IMAGES = {
     "Q": "pieces/wq.png", "q": "pieces/bq.png",  # Queen
     "K": "pieces/wk.png", "k": "pieces/bk.png",  # King
 }
-
+a
 START_POSITION = [
     ["r", "n", "b", "q", "k", "b", "n", "r"],
     ["p", "p", "p", "p", "p", "p", "p", "p"],

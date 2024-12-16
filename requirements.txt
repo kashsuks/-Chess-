@@ -1,3 +1,2 @@
 pygame
-music21
-midiutil
+pyinstaller
