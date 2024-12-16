@@ -373,8 +373,8 @@ def promotePiece(gameState, row, col):
     gameState.board[row][col] = promotionPiece
 
 def getUserPromotionChoice(gameState, row, col, isWhite):
-    bubbleWidth = 50
-    bubbleHeight = 150
+    bubbleWidth = 200
+    bubbleHeight = 50 
     bubbleX = col * SQUARE_SIZE + (SQUARE_SIZE - bubbleWidth) // 2
     bubbleY = row * SQUARE_SIZE + (SQUARE_SIZE - bubbleHeight) // 2
 
@@ -386,15 +386,15 @@ def getUserPromotionChoice(gameState, row, col, isWhite):
     for piece in promotionPieces:
         promotionImages[piece] = pygame.transform.scale(
             pygame.image.load(f"pieces/w{piece}.png" if isWhite else f"pieces/b{piece}.png"),
-            (30, 30)
+            (40, 40)
         )
 
-    piece_spacing = 1
-    startX = (bubbleWidth - 50) // 2
-    startY = 5
+    piece_spacing = 10
+    startX = 10
+    startY = (bubbleHeight - 40) // 2
 
     for i, piece in enumerate(promotionPieces):
-        bubbleSurface.blit(promotionImages[piece], (startX, startY + i * (50 + piece_spacing)))
+        bubbleSurface.blit(promotionImages[piece], (startX + i * (40 + piece_spacing), startY))
 
     screen = pygame.display.get_surface()
     screen.blit(bubbleSurface, (bubbleX, bubbleY))
@@ -405,8 +405,8 @@ def getUserPromotionChoice(gameState, row, col, isWhite):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mousePos = pygame.mouse.get_pos()
                 if bubbleX <= mousePos[0] <= bubbleX + bubbleWidth and bubbleY <= mousePos[1] <= bubbleY + bubbleHeight:
-                    relativeY = mousePos[1] - bubbleY - startY
-                    pieceIndex = relativeY // (50 + piece_spacing)
+                    relativeX = mousePos[0] - bubbleX - startX
+                    pieceIndex = relativeX // (40 + piece_spacing)
                     return promotionPieces[pieceIndex]
 
         pygame.display.update()
