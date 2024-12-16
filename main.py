@@ -338,7 +338,7 @@ def makeMove(gameState, start, end, selectedPiece):
         performCastle(gameState, (startRow, startCol), (endRow, endCol))
     else:
         board[startRow][startCol] = "."
-        board[endRow][endCol] = selectedPiece
+        board[endRow][endCol] = selectedPiece 
 
     if selectedPiece == "K":
         gameState.whiteKingMoved = True
@@ -347,7 +347,9 @@ def makeMove(gameState, start, end, selectedPiece):
 
     # Promotion handling
     if selectedPiece.lower() == "p" and (endRow == 0 or endRow == 7):
-        promotePiece(gameState, endRow, endCol)
+        isWhite = gameState.whiteTurn 
+        promotedPiece = getUserPromotionChoice(gameState, endRow, endCol, isWhite) 
+        board[endRow][endCol] = promotedPiece if isWhite else promotedPiece.lower()
 
     # Update rook movement flags for castling
     if selectedPiece == "R" and startCol == 0:
@@ -385,7 +387,7 @@ def getUserPromotionChoice(gameState, row, col, isWhite):
     promotionImages = {}
     for piece in promotionPieces:
         promotionImages[piece] = pygame.transform.scale(
-            pygame.image.load(f"pieces/w{piece}.png" if isWhite else f"pieces/b{piece}.png"),
+            pygame.image.load(f"pieces/{'b' if not isWhite else 'w'}{piece}.png"),  # Use black pieces for black promotion
             (40, 40)
         )
 
